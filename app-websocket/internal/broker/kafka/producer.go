@@ -3,7 +3,7 @@ package kafka
 import (
 	"app-websocket/internal/config"
 	"app-websocket/internal/domain"
-	byteencoding "app-websocket/internal/pkg/byteEncoding"
+	byteencoding "app-websocket/internal/pkg/byte_encoding"
 	"encoding/json"
 	"errors"
 	"fmt"
