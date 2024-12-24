@@ -13,17 +13,17 @@ type SSOProvider interface {
 	Delete(ctx context.Context, id int64) error
 }
 
-type AuthManager struct {
+type AuthService struct {
 	ssoClient SSOProvider
 }
 
-func NewAuthManager(ssoCl SSOProvider) *AuthManager {
-	return &AuthManager{
+func NewAuthService(ssoCl SSOProvider) *AuthService {
+	return &AuthService{
 		ssoClient: ssoCl,
 	}
 }
 
-func (u *AuthManager) Create(ctx context.Context, req auth.CreateUserReq) error {
+func (u *AuthService) Create(ctx context.Context, req auth.CreateUserReq) error {
 	const op = "internal.services.Create()"
 	err := u.ssoClient.Register(ctx, req)
 	if err != nil {
@@ -32,7 +32,7 @@ func (u *AuthManager) Create(ctx context.Context, req auth.CreateUserReq) error 
 	return nil
 }
 
-func (u *AuthManager) Login(ctx context.Context, req auth.LoginReq) (auth.LoginResp, error) {
+func (u *AuthService) Login(ctx context.Context, req auth.LoginReq) (auth.LoginResp, error) {
 	var resp auth.LoginResp
 	const op = "internal.services.Login()"
 	ssoResp, err := u.ssoClient.Login(ctx, req)
@@ -44,7 +44,7 @@ func (u *AuthManager) Login(ctx context.Context, req auth.LoginReq) (auth.LoginR
 	}, nil
 }
 
-func (u *AuthManager) Validate(ctx context.Context, req auth.ValidateTokenReq) (auth.ValidateTokenResp, error) {
+func (u *AuthService) Validate(ctx context.Context, req auth.ValidateTokenReq) (auth.ValidateTokenResp, error) {
 	var resp auth.ValidateTokenResp
 	const op = "internal.service.Validate()"
 	ssoResp, err := u.ssoClient.Validate(ctx, req)

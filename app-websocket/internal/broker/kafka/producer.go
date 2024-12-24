@@ -3,7 +3,7 @@ package kafka
 import (
 	"app-websocket/internal/config"
 	"app-websocket/internal/domain"
-	byteencoding "app-websocket/internal/pkg/byte_encoding"
+	byteencoding "app-websocket/pkg/byte_encoding"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -37,9 +37,9 @@ func NewProducer(cfg config.KafkaConfig) (*Producer, error) {
 	}, nil
 }
 
-func (p *Producer) Produce(msg domain.Message, topic string, key int64) error {
+func (p *Producer) Produce(msg domain.Event, topic string, key int64) error {
 	op := "kafka.Produce"
-	jsonMsg, err := json.Marshal(msg)
+	jsonMsg, err := json.Marshal(msg.GetEvent())
 	if err != nil {
 		logrus.Error(err)
 		return fmt.Errorf("op: %s: %w", op, err)

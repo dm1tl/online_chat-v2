@@ -19,7 +19,7 @@ const (
 type Consumer struct {
 	consumer *kafka.Consumer
 	topic    string
-	handler  domain.MessageHandler
+	handler  domain.EventHandler
 	stop     bool
 }
 
@@ -57,12 +57,12 @@ func (c *Consumer) Start() {
 		if kafkaMsg == nil {
 			continue
 		}
-		msg, err := domain.NewMessage(kafkaMsg.Value)
+		msg, err := domain.NewEvent(kafkaMsg.Value)
 		if err != nil {
 			logrus.Error(err)
 			continue
 		}
-		if err := c.handler(*msg); err != nil {
+		if err := c.handler(msg); err != nil {
 			logrus.Error("failed to process message", err)
 			continue
 		}
