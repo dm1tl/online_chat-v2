@@ -15,3 +15,13 @@ type GetRoomResp struct {
 	Name     string `db:"name"`
 	Password string `db:"password"`
 }
+
+type Room struct {
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+func (r *Room) GetEvent() interface{} {
+	return r
+}

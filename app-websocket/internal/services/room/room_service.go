@@ -2,44 +2,39 @@ package room
 
 import (
 	"app-websocket/internal/domain"
+
 	"app-websocket/internal/domain/room"
 	"context"
 )
 
-const (
-	roomTopic = "room-topic"
-	roomKey   = int64(1)
-)
-
-type RoomPusher interface {
-	Produce(msg domain.Event, topic string, key int64) error
-}
-
 type RoomStorage interface {
 	CreateRoom(ctx context.Context, req room.CreateRoomReq) (int64, error)
+	GetRooms(ctx context.Context) ([]domain.Room, error)
 }
 
 type RoomService struct {
-	pusher  RoomPusher
-	storage RoomStorage
+	r_storage RoomStorage
 }
 
-func NewRoomService(pusher RoomPusher, storage RoomStorage) *RoomService {
+func NewRoomService(rstorage RoomStorage) *RoomService {
 	return &RoomService{
-		pusher:  pusher,
-		storage: storage,
+
+		r_storage: rstorage,
 	}
 }
 
-func (r *RoomService) CreateRoom(ctx context.Context, req room.CreateRoomReq) error {
-	id, err := r.storage.CreateRoom(ctx, req)
+func (r *RoomService) CreateRoom(ctx context.Context, req room.CreateRoomReq) (int64, error) {
+	id, err := r.r_storage.CreateRoom(ctx, req)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	room := &domain.Room{
-		ID:       id,
-		Name:     req.Name,
-		Password: req.Password,
+	return id, nil
+}
+
+func (r *RoomService) GetRooms(ctx context.Context) ([]domain.Room, error) {
+	data, err := r.r_storage.GetRooms(ctx)
+	if err != nil {
+		return nil, err
 	}
-	return r.pusher.Produce(room, roomTopic, roomKey)
+	return data, nil
 }

@@ -3,6 +3,8 @@ package kafka
 import (
 	"app-websocket/internal/config"
 	"app-websocket/internal/domain"
+	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -19,7 +21,6 @@ const (
 type Consumer struct {
 	consumer *kafka.Consumer
 	topic    string
-	handler  domain.EventHandler
 	stop     bool
 }
 
@@ -45,29 +46,49 @@ func NewConsumer(cfg config.KafkaConfig) (*Consumer, error) {
 	}, nil
 }
 
-func (c *Consumer) Start() {
+func (c *Consumer) Consume(ctx context.Context, handler domain.MessageHandler) error {
+	res := make(chan error)
+	defer close(res)
+
+	go func() {
+		for {
+			if c.stop {
+				break
+			}
+			kafkaMsg, err := c.consumer.ReadMessage(noTimeout)
+			if err != nil {
+				if kafkaErr, ok := err.(kafka.Error); ok && kafkaErr.IsFatal() {
+					res <- fmt.Errorf("critical Kafka error: %w", err)
+					return
+				}
+				logrus.Error("Non-critical Kafka error", err)
+				continue
+			}
+			if kafkaMsg == nil {
+				continue
+			}
+			var domainMsg domain.Message
+			if err := json.Unmarshal(kafkaMsg.Value, &domainMsg); err != nil {
+				logrus.Error("Failed to parse message", err)
+				continue
+			}
+			if err := handler(domainMsg); err != nil {
+				logrus.Error("Failed to process message", err)
+				continue
+			}
+			if _, err := c.consumer.CommitMessage(kafkaMsg); err != nil {
+				logrus.Error("Failed to commit message", err)
+				res <- fmt.Errorf("failed to commit message: %w", err)
+				return
+			}
+		}
+	}()
 	for {
-		if c.stop {
-			break
-		}
-		kafkaMsg, err := c.consumer.ReadMessage(noTimeout)
-		if err != nil {
-			logrus.Error(err)
-		}
-		if kafkaMsg == nil {
-			continue
-		}
-		msg, err := domain.NewEvent(kafkaMsg.Value)
-		if err != nil {
-			logrus.Error(err)
-			continue
-		}
-		if err := c.handler(msg); err != nil {
-			logrus.Error("failed to process message", err)
-			continue
-		}
-		if _, err := c.consumer.CommitMessage(kafkaMsg); err != nil {
-			logrus.Error("failed to commit message", err)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case err := <-res:
+			return err
 		}
 	}
 }

@@ -13,48 +13,20 @@ type Event interface {
 	GetEvent() interface{}
 }
 
+type EventHandler func(Event) error
+
+type MessageHandler func(msg Message) error
+
 type Message struct {
 	Content     string    `json:"content"`
 	Username    string    `json:"username"`
 	TimeCreated time.Time `json:"time_created"`
-	RoomID      string    `json:"room_id"`
-	UserID      string    `json:"user_id"`
+	RoomID      int64     `json:"room_id"`
+	UserID      int64     `json:"user_id"`
 }
 
 func (m *Message) GetEvent() interface{} {
 	return m
-}
-
-type EventHandler func(msg Event) error
-
-func NewEvent(value []byte) (Event, error) {
-	op := "domain.NewEvent"
-	var msg Message
-	if err := json.Unmarshal(value, &msg); err == nil {
-		return &msg, nil
-	}
-
-	var room Room
-	if err := json.Unmarshal(value, &room); err == nil {
-		return &room, nil
-	}
-	return nil, fmt.Errorf("op: %s: %w", op, errCouldNotSerialize)
-}
-
-func NewMessage(value []byte) (*Message, error) {
-	op := "domain.NewMessage"
-	var msg Message
-	if err := json.Unmarshal(value, &msg); err != nil {
-		return nil, fmt.Errorf("op: %s: %w", op, err)
-	}
-	return &msg, nil
-}
-
-type User struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
 }
 
 type Room struct {
@@ -63,6 +35,27 @@ type Room struct {
 	Password string `json:"password"`
 }
 
-func (r *Room) GetEvent() interface{} {
-	return r
+func NewEvent(value []byte) (Event, error) {
+	op := "domain.NewEvent"
+	var msg Message
+	if err := json.Unmarshal(value, &msg); err == nil {
+		return &msg, nil
+	}
+	var client Client
+	if err := json.Unmarshal(value, &client); err == nil {
+		return &client, err
+	}
+
+	return nil, fmt.Errorf("op: %s: %w", op, errCouldNotSerialize)
+}
+
+type Client struct {
+	RoomID   int64  `json:"room_id"`
+	ClientID int64  `json:"client_id"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func (m *Client) GetEvent() interface{} {
+	return m
 }
