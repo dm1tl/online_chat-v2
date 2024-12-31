@@ -1,4 +1,4 @@
-package chat
+package chathandle
 
 import (
 	"github.com/gin-gonic/gin"

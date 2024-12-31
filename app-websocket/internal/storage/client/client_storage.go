@@ -1,19 +1,18 @@
-package client
+package clientstor
 
 import (
 	"app-websocket/internal/domain"
+	"app-websocket/internal/storage/connector"
 	"context"
 	"errors"
 	"fmt"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type ClientRepository struct {
-	db *sqlx.DB
+	db *connector.Database
 }
 
-func NewClientRepository(db *sqlx.DB) *ClientRepository {
+func NewClientRepository(db *connector.Database) *ClientRepository {
 	return &ClientRepository{
 		db: db,
 	}
@@ -23,7 +22,7 @@ func (r *ClientRepository) AddClient(ctx context.Context, req *domain.Client) er
 	op := "repository.AddClient"
 
 	clQuery := "INSERT INTO clients (id, username, room_id) SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM clients WHERE id = $1 AND room_id = $3)"
-	row, err := r.db.ExecContext(ctx, clQuery, req.ClientID, req.Username, req.RoomID)
+	row, err := r.db.GetDB().ExecContext(ctx, clQuery, req.ClientID, req.Username, req.RoomID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

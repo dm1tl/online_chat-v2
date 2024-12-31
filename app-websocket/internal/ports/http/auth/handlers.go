@@ -1,4 +1,4 @@
-package auth
+package authhandle
 
 import (
 	"app-websocket/internal/domain/auth"

@@ -1,4 +1,4 @@
-package chat
+package chathandle
 
 import (
 	"app-websocket/internal/domain"

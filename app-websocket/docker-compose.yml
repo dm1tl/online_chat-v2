@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      - KAFKA_KRAFT_MODE=true
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9093
+      - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9093
+      - KAFKA_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE=false
+      - KAFKA_LISTENER_INTER_BROKER_SECURITY_PROTOCOL=PLAINTEXT
+      - KAFKA_LOG_DIRS=/var/lib/kafka/data
+      - KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE=false
+    ports:
+      - "9093:9093"
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    environment:
+      - KAFKA_SERVER=http://kafka:9093
+    ports:
+      - "8084:8080"
+    depends_on:
+      - kafka

@@ -1,8 +1,7 @@
-package chat
+package chathandle
 
 import (
 	"app-websocket/internal/domain"
-	"app-websocket/internal/domain/client"
 	"app-websocket/internal/domain/room"
 	response "app-websocket/internal/ports/http"
 	"app-websocket/internal/ports/ws"
@@ -24,7 +23,7 @@ type RoomManager interface {
 type ServiceChatPusher interface {
 	Subscribe(ctx context.Context, client *ws.ClientConnection) error
 	PushMessage(ctx context.Context, msg *domain.Message) error
-	Unsubscribe(ctx context.Context, client *client.AddClientReq) error
+	Unsubscribe(ctx context.Context, client *ws.ClientConnection) error
 }
 
 type Handler struct {
@@ -110,5 +109,8 @@ func (h *Handler) JoinRoom(c *gin.Context) {
 			Message: "couldn't join chat",
 		})
 	}
+
+	go client.ReadMessage(ctx)
+	client.WriteMessage()
 
 }

@@ -2,7 +2,6 @@ package ws
 
 import (
 	"app-websocket/internal/domain"
-	"app-websocket/internal/domain/client"
 	"context"
 	"log/slog"
 	"time"
@@ -13,7 +12,7 @@ import (
 
 type ServiceChatPusher interface {
 	PushMessage(ctx context.Context, msg *domain.Message) error
-	Unsubscribe(ctx context.Context, client *client.AddClientReq) error
+	Unsubscribe(ctx context.Context, client *ClientConnection) error
 }
 
 type ClientConnection struct {

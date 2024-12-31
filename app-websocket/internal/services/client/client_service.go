@@ -11,7 +11,7 @@ type ClientStorage interface {
 }
 
 type MessagePusher interface {
-	Produce(msg domain.Event, topic string, key int64) error
+	Produce(msg domain.Message, topic string, key int64) error
 }
 
 type ClientService struct {
@@ -20,9 +20,10 @@ type ClientService struct {
 	hub        *ws.Hub
 }
 
-func NewClientService(clstorage ClientStorage, hub *ws.Hub) *ClientService {
+func NewClientService(clstorage ClientStorage, pusher MessagePusher, hub *ws.Hub) *ClientService {
 	return &ClientService{
 		cl_storage: clstorage,
+		pusher:     pusher,
 		hub:        hub,
 	}
 }
@@ -36,7 +37,10 @@ func (r *ClientService) Subscribe(ctx context.Context, client *ws.ClientConnecti
 	r.hub.AddConnection(client)
 	return nil
 }
+func (r *ClientService) Unsubscribe(ctx context.Context, client *ws.ClientConnection) error {
+	panic("implement me")
+}
 
 func (r *ClientService) PushMessage(_ context.Context, msg *domain.Message) error {
-	return r.pusher.Produce(msg, "messages", msg.RoomID)
+	return r.pusher.Produce(*msg, "messages", msg.RoomID)
 }

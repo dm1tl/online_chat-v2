@@ -1,19 +1,18 @@
-package room
+package roomstor
 
 import (
 	"app-websocket/internal/domain"
 	"app-websocket/internal/domain/room"
+	"app-websocket/internal/storage/connector"
 	"context"
 	"fmt"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type RoomRepository struct {
-	db *sqlx.DB
+	db *connector.Database
 }
 
-func NewRoomRepository(db *sqlx.DB) *RoomRepository {
+func NewRoomRepository(db *connector.Database) *RoomRepository {
 	return &RoomRepository{
 		db: db,
 	}
@@ -24,7 +23,7 @@ func (r *RoomRepository) CreateRoom(ctx context.Context, req room.CreateRoomReq)
 	query := "INSERT INTO rooms (name, password) VALUES ($1, $2) RETURNING id"
 	var id int64
 
-	if err := r.db.QueryRowContext(ctx, query, req.Name, req.Password).Scan(&id); err != nil {
+	if err := r.db.GetDB().QueryRowContext(ctx, query, req.Name, req.Password).Scan(&id); err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 	return id, nil
@@ -34,7 +33,7 @@ func (r *RoomRepository) GetRooms(ctx context.Context) ([]domain.Room, error) {
 	op := "repository.GetAllRooms"
 	var output []domain.Room
 	query := "SELECT id, name, password FROM rooms"
-	res, err := r.db.QueryContext(ctx, query)
+	res, err := r.db.GetDB().QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
